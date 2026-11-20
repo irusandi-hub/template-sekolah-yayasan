@@ -5,7 +5,7 @@
   document.querySelectorAll('[data-cfg]').forEach((el) => { if (C[el.dataset.cfg] != null) el.textContent = C[el.dataset.cfg]; });
   document.querySelectorAll('[data-count-cfg]').forEach((el) => { if (C[el.dataset.countCfg] != null) { el.dataset.count = C[el.dataset.countCfg]; el.textContent = C[el.dataset.countCfg]; } });
   const hrefs = { wa: 'https://wa.me/' + C.wa + '?text=' + encodeURIComponent(C.waPesan || ''), email: 'mailto:' + C.email, instagram: 'https://instagram.com/' + C.instagram, situs: 'https://' + C.situs, video: C.video };
-  document.querySelectorAll('[data-cfg-href]').forEach((el) => { const h = hrefs[el.dataset.cfgHref]; if (h) el.href = h; });
+  document.querySelectorAll('[data-cfg-href]').forEach((el) => {\n    const h = hrefs[el.dataset.cfgHref];\n    if (typeof h === 'string' && h.trim() && h !== '#') { el.href = h; }\n    else { el.hidden = true; el.removeAttribute('href'); }\n  });
   document.querySelectorAll('[data-cfg-ig]').forEach((el) => (el.textContent = '@' + C.instagram));
   if (C.nama) document.title = C.nama + ' · Sekolah Qur\'ani Terpadu';
 
