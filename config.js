@@ -9,6 +9,8 @@ window.SITE = {
   singkat: 'Cahaya Ilmu',
   sekolah: 'Sekolah Cahaya Ilmu',
   kota: 'Jakarta',                 // dipakai untuk jadwal salat otomatis
+  negara: 'Indonesia',             // negara untuk perhitungan jadwal salat
+  metode: 20,                      // metode perhitungan Aladhan
   alamat: 'Jl. Contoh Raya No. 1, Kota Contoh, Indonesia 00000',
   wa: '6281200000000',              // format internasional tanpa +
   waTampil: '0812-0000-0000',

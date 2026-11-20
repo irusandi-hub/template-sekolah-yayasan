@@ -5,7 +5,11 @@
   document.querySelectorAll('[data-cfg]').forEach((el) => { if (C[el.dataset.cfg] != null) el.textContent = C[el.dataset.cfg]; });
   document.querySelectorAll('[data-count-cfg]').forEach((el) => { if (C[el.dataset.countCfg] != null) { el.dataset.count = C[el.dataset.countCfg]; el.textContent = C[el.dataset.countCfg]; } });
   const hrefs = { wa: 'https://wa.me/' + C.wa + '?text=' + encodeURIComponent(C.waPesan || ''), email: 'mailto:' + C.email, instagram: 'https://instagram.com/' + C.instagram, situs: 'https://' + C.situs, video: C.video };
-  document.querySelectorAll('[data-cfg-href]').forEach((el) => { const h = hrefs[el.dataset.cfgHref]; if (h) el.href = h; });
+  document.querySelectorAll('[data-cfg-href]').forEach((el) => {
+    const h = hrefs[el.dataset.cfgHref];
+    if (typeof h === 'string' && h.trim() && h !== '#') el.href = h;
+    else { el.hidden = true; el.removeAttribute('href'); }
+  });
   document.querySelectorAll('[data-cfg-ig]').forEach((el) => (el.textContent = '@' + C.instagram));
   if (C.nama) document.title = C.nama + ' · Sekolah Qur\'ani Terpadu';
 
@@ -17,17 +21,20 @@
   const burger = document.querySelector('.nav__burger');
   const menu = document.getElementById('menu');
   const setMenu = (open) => {
-    burger.setAttribute('aria-expanded', open);
+    if (!burger || !menu) return;
+    burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Tutup menu' : 'Buka menu');
     menu.hidden = !open;
     document.body.style.overflow = open ? 'hidden' : '';
   };
-  burger.addEventListener('click', () => setMenu(menu.hidden));
-  menu.addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
+  if (burger && menu) {
+    burger.addEventListener('click', () => setMenu(menu.hidden));
+    menu.addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
+  }
   addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) setMenu(false); });
 
   const nav = document.querySelector('.nav');
-  const onScroll = () => nav.classList.toggle('is-solid', scrollY > 40);
+  const onScroll = () => nav && nav.classList.toggle('is-solid', scrollY > 40);
   addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
@@ -36,6 +43,7 @@
   const keys = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
   const list = document.querySelector('[data-times]');
   const tick = () => {
+    if (!list || !list.children.length) return;
     const now = new Date();
     const mins = now.getHours() * 60 + now.getMinutes();
     const items = [...list.children];
@@ -53,14 +61,27 @@
   tick();
   setInterval(tick, 1000);
   const kota = C.kota || 'Jakarta';
-  fetch('https://api.aladhan.com/v1/timingsByCity?city=' + encodeURIComponent(kota) + '&country=Indonesia&method=20')
-    .then((r) => r.json())
-    .then(({ data }) => {
-      [...list.children].forEach((li, i) => (li.querySelector('b').textContent = data.timings[keys[i]].slice(0, 5)));
-      document.querySelector('[data-pray-date]').textContent = kota + ' · Kemenag';
-      tick();
-    })
-    .catch(() => {});
+  const negara = C.negara || 'Indonesia';
+  const metode = Number.isFinite(Number(C.metode)) ? Number(C.metode) : 20;
+  if (list) {
+    fetch('https://api.aladhan.com/v1/timingsByCity?city=' + encodeURIComponent(kota) + '&country=' + encodeURIComponent(negara) + '&method=' + metode)
+      .then((r) => { if (!r.ok) throw new Error('Jadwal salat tidak tersedia'); return r.json(); })
+      .then(({ data }) => {
+        if (!data || !data.timings) throw new Error('Format jadwal salat tidak valid');
+        [...list.children].forEach((li, i) => {
+          const time = data.timings[keys[i]];
+          const value = li.querySelector('b');
+          if (time && value) value.textContent = time.slice(0, 5);
+        });
+        const dateLabel = document.querySelector('[data-pray-date]');
+        if (dateLabel) dateLabel.textContent = kota + ' · ' + negara;
+        tick();
+      })
+      .catch(() => {
+        const dateLabel = document.querySelector('[data-pray-date]');
+        if (dateLabel) dateLabel.textContent = kota + ' · jadwal contoh';
+      });
+  }
 
   if (!hasGsap || reduce) { loader && loader.remove(); return; }
 
